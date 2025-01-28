@@ -1,63 +1,105 @@
 import { useEffect, useRef, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 function App() {
-  const [message, setMessage] = useState("j");
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const [userMessages, setUserMessages] = useState<string[]>([]);
+  const [serverMessage, setServerMessage] = useState(null);
   const socketRef = useRef<WebSocket | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
-    const socket = new WebSocket("ws://localhost:3000");
-    socketRef.current = socket;
-    socket.onopen = () => {
+    const ws = new WebSocket("ws://localhost:3000");
+    socketRef.current = ws;
+
+    ws.onopen = () => {
       console.log("Connected to server");
     };
-    socket.onmessage = (ev) => {
-      setMessage(ev.data);
+
+    ws.onmessage = (ev) => {
+      setServerMessage(ev.data);
+      setTimeout(() => setServerMessage(null), 3000); // Clear message after 3 seconds
     };
-    socket.onclose = () => {
+
+    ws.onclose = () => {
       console.log("Connection to server closed");
     };
+
+    ws.onerror = (err) => {
+      console.error("WebSocket error:", err);
+    };
+
     return () => {
-      socket.close();
+      ws.close();
     };
   }, []);
 
   const sendMessage = () => {
     if (
-      socketRef.current &&
-      socketRef.current.readyState === WebSocket.OPEN &&
+      socketRef &&
+      socketRef.current?.readyState === WebSocket.OPEN &&
       inputRef.current?.value
     ) {
-      socketRef.current.send(inputRef.current.value);
+      const userMessage = inputRef.current.value;
+      setUserMessages((prev) => [...prev, userMessage]);
+      socketRef.current.send(userMessage);
       inputRef.current.value = "";
     } else {
       alert("WebSocket is not connected or input is empty");
     }
   };
+
   return (
-    <div className="flex flex-col justify-between bg-neutral-900 text-white w-screen h-screen">
-      <div className="border border-white p-4">
-        <div className="inline-flex flex-col text-right ml-4 ">
-          <h1 className="font-bold text-2xl tracking-widest">Ping-Pong</h1>
-          <h3 className="tracking-wide">Echo server</h3>
-        </div>
-      </div>
-      <div>{message}</div>
-      <div className="flex w-8/10 gap-2">
+    <div className="w-screen h-screen flex bg-gray-100 text-gray-800">
+      <div className="w-1/3 p-4 flex flex-col justify-center items-start bg-white shadow-md">
+        <h1 className="text-3xl font-bold mb-4">Ping-Pong</h1>
+        <h3 className="text-lg text-gray-500 mb-8">Echo Server</h3>
         <input
           ref={inputRef}
           type="text"
-          name=""
-          id=""
           placeholder="Enter message"
-          className="bg-neutral-700 rounded-md p-2"
+          className="w-full p-3 border border-gray-300 rounded-md mb-4 focus:outline-none focus:ring-2 focus:ring-blue-400"
         />
         <button
-          className="border px-4 py-2 rounded bg-neutral-100 text-black"
           onClick={sendMessage}
+          className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
         >
           Send
         </button>
+      </div>
+
+      <div className="w-2/3 flex flex-col justify-center items-center relative bg-gray-50 pl-20 mb-10">
+        <div className="relative w-full h-full overflow-hidden flex flex-col justify-end">
+          <AnimatePresence>
+            {userMessages.map((msg, index) => (
+              <motion.div
+                key={index}
+                className="text-gray-600 bg-gray-200 p-2 mb-2 rounded-md self-start min-w-1/3"
+                initial={{ opacity: 0, y: 50 }} // Start below
+                animate={{ opacity: 1, y: 0 }} // Move to position
+                exit={{ opacity: 0, y: -50 }} // Move upward and fade out
+                transition={{ duration: 0.5 }}
+              >
+                {msg}
+              </motion.div>
+            ))}
+          </AnimatePresence>
+        </div>
+
+        <div>
+          <AnimatePresence>
+            {serverMessage && (
+              <motion.div
+                className="absolute bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white p-8 rounded-full shadow-2xl"
+                initial={{ scale: 50, opacity: 1 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.5, opacity: 0 }}
+                transition={{ duration: 1 }}
+              >
+                {serverMessage}
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
   );
