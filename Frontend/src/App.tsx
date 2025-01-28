@@ -61,10 +61,12 @@ function App() {
           placeholder="Enter message"
           className="w-full p-3 border border-gray-300 rounded-md focus:outline-none"
         />
-        <p className="ml-2 italic opacity-55 text-xs">Try sending <span className="font-bold">'ping'</span></p>
+        <p className="ml-2 italic opacity-55 text-xs">
+          Try sending <span className="font-bold">'ping'</span>
+        </p>
         <button
           onClick={sendMessage}
-          className="px-4 py-2 my-4 w-full bg-blue-500 text-white rounded-md hover:bg-blue-600"
+          className="px-4 py-2 my-4 w-full bg-blue-500 text-white rounded-md hover:bg-blue-600 cursor-pointer"
         >
           Send
         </button>
@@ -88,21 +90,19 @@ function App() {
           </AnimatePresence>
         </div>
 
-        <div>
-          <AnimatePresence>
-            {serverMessage && (
-              <motion.div
-                className="absolute bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white p-8 rounded-full shadow-2xl"
-                initial={{ scale: 50, opacity: 1 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.5, opacity: 0 }}
-                transition={{ duration: 1 }}
-              >
-                {serverMessage}
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </div>
+        <AnimatePresence>
+          {serverMessage && (
+            <motion.div
+              className="absolute bg-gradient-to-r from-purple-500 via-pink-500 to-red-500 text-white p-8 rounded-full shadow-2xl"
+              initial={{ scale: 50, opacity: 1 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.5, opacity: 0 }}
+              transition={{ duration: 1 }}
+            >
+              {serverMessage}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
     </div>
   );
